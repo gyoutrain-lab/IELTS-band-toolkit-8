@@ -2,104 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Integrated Band 9 Architect</title>
+    <title>Band 9 Lexical Architect</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; max-width: 900px; margin: 40px auto; padding: 20px; background: #f4f7f6; }
-        .block { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .segment { display: inline-block; padding: 6px 10px; margin: 2px; border-bottom: 2px solid #3498db; cursor: pointer; color: #2c3e50; background: #fdfdfd; }
-        .segment:hover { background: #eef7ff; }
-        .option-box { background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; margin: 20px 0; }
-        button { background: #2c3e50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
-        #feedback { margin-top: 20px; padding: 15px; border-radius: 6px; border: 1px solid #ccc; display: none; }
+        .drill-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .guide-box { background: #eef7ff; padding: 20px; border-left: 6px solid #2980b9; margin-bottom: 20px; }
+        select, textarea { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button { background: #2c3e50; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; }
+        #scoring { font-weight: bold; padding: 15px; margin-top: 20px; border-radius: 6px; display: none; }
     </style>
 </head>
 <body>
-    <h1>Lexical Architect: Integrated Drilling</h1>
-    <div class="block">
-        <label><strong>1. Select Competency:</strong></label>
-        <select id="compSelect" onchange="loadTest()">
-            <option value="inversion">Inversion</option>
-            <option value="subjunctive">Subjunctive</option>
-            <option value="register">Register</option>
+    <h1>Lexical Architect: IELTS Band 9 Drill</h1>
+    <div class="drill-box">
+        <label><strong>Competency:</strong></label>
+        <select id="comp" onchange="loadNewSession()">
+            <option value="inversion">1. Inversions</option>
+            <option value="subjunctive">2. Advanced Subjunctive</option>
+            <option value="register">3. Academic Register</option>
+            <option value="connectors">4. Logical Connectors</option>
         </select>
         
-        <p><strong>2. Deconstruct (Click words to upgrade):</strong></p>
-        <div id="builder"></div>
+        <div id="guide" class="guide-box"></div>
+        <p id="promptDisplay"></p>
+        <textarea id="drillArea" rows="4" placeholder="Draft your Band 9 academic construction here..."></textarea>
         
-        <div id="options" class="option-box">Click a segment to see Band 9 alternatives.</div>
+        <div class="btn-group">
+            <button onclick="executeAudit()">Submit for Audit</button>
+            <button onclick="nextPrompt()">Next Prompt</button>
+        </div>
         
-        <button onclick="auditFinal()">Audit Professionalism</button>
-        <div id="feedback"></div>
+        <div id="scoring"></div>
     </div>
 
     <script>
-        const testData = {
-            inversion: [
-                ["If clinical negligence", {"Should clinical malpractice": "Band 9"}],
-                ["persists,", {"endure,": "Band 7"}],
-                ["the hospital", {"the institution": "Band 9"}],
-                ["faces", {"is subjected to": "Band 9"}],
-                ["major lawsuits.", {"severe litigious repercussions.": "Band 9"}]
-            ],
-            subjunctive: [
-                ["If the hospital", {"Were the medical facility": "Band 9"}],
-                ["had", {"to be endowed with": "Band 9"}],
-                ["enough budget,", {"adequate fiscal resources,": "Band 9"}],
-                ["the crisis", {"the systemic exigency": "Band 9"}],
-                ["would end.", {"would be alleviated.": "Band 9"}]
-            ],
-            register: [
-                ["The nurse", {"The healthcare practitioner": "Band 9"}],
-                ["did a lot of work", {"undertook rigorous clinical intervention": "Band 9"}],
-                ["to help", {"to facilitate": "Band 9"}],
-                ["the patient", {"the subject's": "Band 9"}],
-                ["feel better.", {"expedited recovery.": "Band 9"}]
-            ]
+        const library = {
+            inversion: ["If clinical negligence persists, the hospital faces major lawsuits.", "If modern training is ignored, care standards fall.", "If government fails to regulate, the crisis worsens.", "If hospitals do not invest in tech, efficiency decreases.", "If staff are not supported, morale drops.", "If policies remain outdated, outcomes are poor.", "If we do not address inequality, access is limited.", "If public awareness is ignored, preventative care fails.", "If research funding is cut, innovation disappears.", "If communication is not standardized, errors occur."],
+            subjunctive: ["If the hospital had enough budget, the crisis would end.", "If staff were motivated, productivity would be higher.", "If government were to intervene, systems would stabilize.", "If clinicians had been aware, error would be avoided.", "If education were centralized, workforce would be capable.", "If regulations were enforced, hazards would diminish.", "If patients were fully involved, success would rise.", "If funding had been allocated, the facility would be ready.", "If leadership were to delegate, processes would smooth.", "If clinic followed guidelines, risk would be zero."],
+            register: ["The nurse did a lot to help the patient get better.", "The hospital is good at making things go right.", "The new policy will help fix the big problems.", "Using computers makes information easy to find.", "The way the hospital manages money is a problem.", "Teachers want to make the study plan better.", "Many people think learning skills is very helpful.", "The city is planning to build more roads.", "The doctor saw the test results were not good.", "We need to stop the pollution in the city."],
+            connectors: ["Automation replaces labor. It also raises ethical concerns.", "Medical tourism is increasing. It is a source of revenue.", "Cost of living is rising. Many families struggle.", "Online learning is popular. It has major drawbacks.", "Public transport is essential. It reduces congestion.", "Urbanization is accelerating. It affects the environment.", "Strict laws are needed. They prevent corruption.", "Globalization is beneficial. It creates gaps.", "Mental health is vital. It is misunderstood.", "Research is key. It helps solve pandemics."]
         };
 
-        let currentData = [];
-        function loadTest() {
-            const type = document.getElementById('compSelect').value;
-            currentData = testData[type].map(item => [item[0], item[1]]);
+        const guides = {
+            inversion: "Blueprint: Start with 'Rarely', 'Never before', or 'Under no circumstances'. Use strong verbs: 'precipitates', 'exacerbates'.",
+            subjunctive: "Blueprint: Use 'Were/Had [Subject]...'. Replace generic verbs with 'fostered', 'mitigated', 'optimized'.",
+            register: "Blueprint: No phrasal verbs or contractions. Use 'suboptimal', 'advantageous', 'detrimental'.",
+            connectors: "Blueprint: Use 'Consequently', 'Notwithstanding', 'Conversely'. Ensure logical cohesion."
+        };
+
+        let comp = 'inversion', idx = 0;
+
+        function loadNewSession() {
+            comp = document.getElementById('comp').value;
+            idx = 0;
             render();
         }
 
         function render() {
-            const b = document.getElementById('builder');
-            b.innerHTML = '';
-            currentData.forEach((seg, i) => {
-                const s = document.createElement('span');
-                s.className = 'segment';
-                s.innerText = seg[0];
-                s.onclick = () => showOptions(i);
-                b.appendChild(s);
-            });
+            document.getElementById('promptDisplay').innerHTML = "<strong>Prompt: </strong>" + library[comp][idx];
+            document.getElementById('guide').innerHTML = guides[comp];
+            document.getElementById('drillArea').value = '';
+            document.getElementById('scoring').style.display = 'none';
         }
 
-        function showOptions(i) {
-            const opts = currentData[i][1];
-            const o = document.getElementById('options');
-            o.innerHTML = `<strong>Upgrade "${currentData[i][0]}":</strong><br>`;
-            for(let word in opts) o.innerHTML += `<button onclick="replace(${i}, '${word}')">${word}</button> `;
+        function executeAudit() {
+            const val = document.getElementById('drillArea').value;
+            const scoreDiv = document.getElementById('scoring');
+            const isBand9 = val.length > 70 && !val.match(/good|bad|people|easy|thing|fix|help/i);
+            
+            scoreDiv.style.display = 'block';
+            scoreDiv.style.backgroundColor = isBand9 ? '#d4edda' : '#f8d7da';
+            scoreDiv.innerHTML = isBand9 ? "Score: Band 9 (Masterful). Excellent academic lexicon." : "Score: Band 6/7. Ensure you follow the Blueprint and avoid generic terminology.";
         }
 
-        function replace(i, word) {
-            currentData[i][0] = word;
+        function nextPrompt() {
+            idx = (idx + 1) % 10;
             render();
         }
 
-        function auditFinal() {
-            const final = currentData.map(d => d[0]).join(' ');
-            const f = document.getElementById('feedback');
-            const isBand9 = final.length > 50 && !final.includes('If');
-            
-            f.style.display = 'block';
-            f.innerHTML = isBand9 ? 
-                "<strong>Scoring: Band 9 (Masterful)</strong><br>Syntactic architecture and lexical density are optimal." : 
-                "<strong>Scoring: Band 6/7</strong><br>Continue upgrading segments to reach Band 9 status.";
-        }
-
-        loadTest();
+        render();
     </script>
 </body>
 </html>
