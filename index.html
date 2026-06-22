@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Integrated Band 9 Architect</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; max-width: 900px; margin: 40px auto; padding: 20px; background: #f4f7f6; }
+        .block { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .segment { display: inline-block; padding: 6px 10px; margin: 2px; border-bottom: 2px solid #3498db; cursor: pointer; color: #2c3e50; background: #fdfdfd; }
+        .segment:hover { background: #eef7ff; }
+        .option-box { background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60; margin: 20px 0; }
+        button { background: #2c3e50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        #feedback { margin-top: 20px; padding: 15px; border-radius: 6px; border: 1px solid #ccc; display: none; }
+    </style>
+</head>
+<body>
+    <h1>Lexical Architect: Integrated Drilling</h1>
+    <div class="block">
+        <label><strong>1. Select Competency:</strong></label>
+        <select id="compSelect" onchange="loadTest()">
+            <option value="inversion">Inversion</option>
+            <option value="subjunctive">Subjunctive</option>
+            <option value="register">Register</option>
+        </select>
+        
+        <p><strong>2. Deconstruct (Click words to upgrade):</strong></p>
+        <div id="builder"></div>
+        
+        <div id="options" class="option-box">Click a segment to see Band 9 alternatives.</div>
+        
+        <button onclick="auditFinal()">Audit Professionalism</button>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        const testData = {
+            inversion: [
+                ["If clinical negligence", {"Should clinical malpractice": "Band 9"}],
+                ["persists,", {"endure,": "Band 7"}],
+                ["the hospital", {"the institution": "Band 9"}],
+                ["faces", {"is subjected to": "Band 9"}],
+                ["major lawsuits.", {"severe litigious repercussions.": "Band 9"}]
+            ],
+            subjunctive: [
+                ["If the hospital", {"Were the medical facility": "Band 9"}],
+                ["had", {"to be endowed with": "Band 9"}],
+                ["enough budget,", {"adequate fiscal resources,": "Band 9"}],
+                ["the crisis", {"the systemic exigency": "Band 9"}],
+                ["would end.", {"would be alleviated.": "Band 9"}]
+            ],
+            register: [
+                ["The nurse", {"The healthcare practitioner": "Band 9"}],
+                ["did a lot of work", {"undertook rigorous clinical intervention": "Band 9"}],
+                ["to help", {"to facilitate": "Band 9"}],
+                ["the patient", {"the subject's": "Band 9"}],
+                ["feel better.", {"expedited recovery.": "Band 9"}]
+            ]
+        };
+
+        let currentData = [];
+        function loadTest() {
+            const type = document.getElementById('compSelect').value;
+            currentData = testData[type].map(item => [item[0], item[1]]);
+            render();
+        }
+
+        function render() {
+            const b = document.getElementById('builder');
+            b.innerHTML = '';
+            currentData.forEach((seg, i) => {
+                const s = document.createElement('span');
+                s.className = 'segment';
+                s.innerText = seg[0];
+                s.onclick = () => showOptions(i);
+                b.appendChild(s);
+            });
+        }
+
+        function showOptions(i) {
+            const opts = currentData[i][1];
+            const o = document.getElementById('options');
+            o.innerHTML = `<strong>Upgrade "${currentData[i][0]}":</strong><br>`;
+            for(let word in opts) o.innerHTML += `<button onclick="replace(${i}, '${word}')">${word}</button> `;
+        }
+
+        function replace(i, word) {
+            currentData[i][0] = word;
+            render();
+        }
+
+        function auditFinal() {
+            const final = currentData.map(d => d[0]).join(' ');
+            const f = document.getElementById('feedback');
+            const isBand9 = final.length > 50 && !final.includes('If');
+            
+            f.style.display = 'block';
+            f.innerHTML = isBand9 ? 
+                "<strong>Scoring: Band 9 (Masterful)</strong><br>Syntactic architecture and lexical density are optimal." : 
+                "<strong>Scoring: Band 6/7</strong><br>Continue upgrading segments to reach Band 9 status.";
+        }
+
+        loadTest();
+    </script>
+</body>
+</html>
