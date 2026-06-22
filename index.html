@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Band 9 Lexical Architect</title>
+    <title>Integrated Band 9 Architect</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; max-width: 900px; margin: 40px auto; padding: 20px; background: #f4f7f6; }
         .drill-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -14,10 +14,10 @@
     </style>
 </head>
 <body>
-    <h1>Lexical Architect: IELTS Band 9 Drill</h1>
+    <h1>Lexical Architect: Synchronized Drilling</h1>
     <div class="drill-box">
         <label><strong>Competency:</strong></label>
-        <select id="comp" onchange="loadNewSession()">
+        <select id="comp" onchange="resetAndLoad()">
             <option value="inversion">1. Inversions</option>
             <option value="subjunctive">2. Advanced Subjunctive</option>
             <option value="register">3. Academic Register</option>
@@ -26,7 +26,7 @@
         
         <div id="guide" class="guide-box"></div>
         <p id="promptDisplay"></p>
-        <textarea id="drillArea" rows="4" placeholder="Draft your Band 9 academic construction here..."></textarea>
+        <textarea id="drillArea" rows="4" placeholder="Draft your Band 9 construction here..."></textarea>
         
         <div class="btn-group">
             <button onclick="executeAudit()">Submit for Audit</button>
@@ -37,31 +37,49 @@
     </div>
 
     <script>
-        const library = {
-            inversion: ["If clinical negligence persists, the hospital faces major lawsuits.", "If modern training is ignored, care standards fall.", "If government fails to regulate, the crisis worsens.", "If hospitals do not invest in tech, efficiency decreases.", "If staff are not supported, morale drops.", "If policies remain outdated, outcomes are poor.", "If we do not address inequality, access is limited.", "If public awareness is ignored, preventative care fails.", "If research funding is cut, innovation disappears.", "If communication is not standardized, errors occur."],
-            subjunctive: ["If the hospital had enough budget, the crisis would end.", "If staff were motivated, productivity would be higher.", "If government were to intervene, systems would stabilize.", "If clinicians had been aware, error would be avoided.", "If education were centralized, workforce would be capable.", "If regulations were enforced, hazards would diminish.", "If patients were fully involved, success would rise.", "If funding had been allocated, the facility would be ready.", "If leadership were to delegate, processes would smooth.", "If clinic followed guidelines, risk would be zero."],
-            register: ["The nurse did a lot to help the patient get better.", "The hospital is good at making things go right.", "The new policy will help fix the big problems.", "Using computers makes information easy to find.", "The way the hospital manages money is a problem.", "Teachers want to make the study plan better.", "Many people think learning skills is very helpful.", "The city is planning to build more roads.", "The doctor saw the test results were not good.", "We need to stop the pollution in the city."],
-            connectors: ["Automation replaces labor. It also raises ethical concerns.", "Medical tourism is increasing. It is a source of revenue.", "Cost of living is rising. Many families struggle.", "Online learning is popular. It has major drawbacks.", "Public transport is essential. It reduces congestion.", "Urbanization is accelerating. It affects the environment.", "Strict laws are needed. They prevent corruption.", "Globalization is beneficial. It creates gaps.", "Mental health is vital. It is misunderstood.", "Research is key. It helps solve pandemics."]
-        };
-
-        const guides = {
-            inversion: "Blueprint: Start with 'Rarely', 'Never before', or 'Under no circumstances'. Use strong verbs: 'precipitates', 'exacerbates'.",
-            subjunctive: "Blueprint: Use 'Were/Had [Subject]...'. Replace generic verbs with 'fostered', 'mitigated', 'optimized'.",
-            register: "Blueprint: No phrasal verbs or contractions. Use 'suboptimal', 'advantageous', 'detrimental'.",
-            connectors: "Blueprint: Use 'Consequently', 'Notwithstanding', 'Conversely'. Ensure logical cohesion."
+        // Data is now objects containing both the prompt and the specific, synchronized blueprint
+        const data = {
+            inversion: [
+                {p: "If clinical negligence persists, the hospital faces major lawsuits.", b: "Use: <i>Should clinical malpractice persist, the institution faces severe litigious repercussions.</i>"},
+                {p: "If modern medical training is ignored, the standard of care falls.", b: "Use: <i>Never before has medical training been so critical; failing to modernize results in compromised clinical outcomes.</i>"},
+                {p: "If the government fails to regulate, the crisis will worsen.", b: "Use: <i>Rarely does an unregulated sector stabilize; instead, it precipitates a systemic collapse.</i>"},
+                {p: "If hospitals do not invest in tech, efficiency will decrease.", b: "Use: <i>Only by allocating capital toward innovation can hospitals prevent the degradation of operational efficacy.</i>"},
+                {p: "If staff are not supported, morale will likely drop.", b: "Use: <i>Seldom is optimal morale sustained when personnel lack institutional backing.</i>"}
+            ],
+            subjunctive: [
+                {p: "If the hospital had enough budget, the crisis would end.", b: "Use: <i>Were the institution to be endowed with adequate fiscal resources, this systemic exigency would be alleviated.</i>"},
+                {p: "If staff were motivated, the productivity would be higher.", b: "Use: <i>Had the personnel been adequately incentivized, clinical output would be significantly enhanced.</i>"},
+                {p: "If the government were to intervene, the system would stabilize.", b: "Use: <i>Should state-level intervention occur, the system would foster structural equilibrium.</i>"},
+                {p: "If clinicians had been aware, the diagnostic error would be avoided.", b: "Use: <i>Had the attending practitioners been cognizant of protocol, this diagnostic error would have been successfully circumvented.</i>"},
+                {p: "If education were centralized, the workforce would be more capable.", b: "Use: <i>Were pedagogical frameworks to be standardized, the workforce would exhibit heightened professional competency.</i>"}
+            ],
+            register: [
+                {p: "The nurse did a lot to help the patient feel better.", b: "Use: <i>The healthcare practitioner undertook rigorous clinical intervention to optimize patient recovery.</i>"},
+                {p: "The hospital is good at making things go right.", b: "Use: <i>The facility demonstrates exceptional proficiency in facilitating expedited patient rehabilitation.</i>"},
+                {p: "The new policy will help fix the big problems.", b: "Use: <i>The implemented policy is designed to mitigate prevailing systemic deficiencies.</i>"},
+                {p: "Using computers makes information easy to find.", b: "Use: <i>Digital integration facilitates unprecedented accessibility to institutional data.</i>"},
+                {p: "The way the hospital manages money is a problem.", b: "Use: <i>Current fiscal administration presents a substantial institutional vulnerability.</i>"}
+            ],
+            connectors: [
+                {p: "Automation replaces human labor. It also raises ethical concerns.", b: "Use: <i>While automation supplants the manual workforce, it concurrently raises profound moral dilemmas.</i>"},
+                {p: "Medical tourism is increasing. It is a source of revenue.", b: "Use: <i>Not only is medical tourism expanding, but it also serves as a lucrative mechanism for capital generation.</i>"},
+                {p: "The cost of living is rising. Many families struggle.", b: "Use: <i>Consequently, escalating socioeconomic pressures exacerbate domestic financial instability.</i>"},
+                {p: "Online learning is popular. It has some major drawbacks.", b: "Use: <i>Notwithstanding the ubiquity of online learning, it possesses inherent pedagogical limitations.</i>"},
+                {p: "Public transport is essential. It reduces traffic congestion.", b: "Use: <i>Given its capacity to improve transit, public transport is indispensable for mitigating urban vehicular congestion.</i>"}
+            ]
         };
 
         let comp = 'inversion', idx = 0;
 
-        function loadNewSession() {
-            comp = document.getElementById('comp').value;
-            idx = 0;
-            render();
+        function resetAndLoad() { 
+            comp = document.getElementById('comp').value; 
+            idx = 0; 
+            render(); 
         }
 
         function render() {
-            document.getElementById('promptDisplay').innerHTML = "<strong>Prompt: </strong>" + library[comp][idx];
-            document.getElementById('guide').innerHTML = guides[comp];
+            document.getElementById('promptDisplay').innerHTML = "<strong>Prompt: </strong>" + data[comp][idx].p;
+            document.getElementById('guide').innerHTML = "<strong>Targeted Blueprint:</strong><br>" + data[comp][idx].b;
             document.getElementById('drillArea').value = '';
             document.getElementById('scoring').style.display = 'none';
         }
@@ -73,11 +91,11 @@
             
             scoreDiv.style.display = 'block';
             scoreDiv.style.backgroundColor = isBand9 ? '#d4edda' : '#f8d7da';
-            scoreDiv.innerHTML = isBand9 ? "Score: Band 9 (Masterful). Excellent academic lexicon." : "Score: Band 6/7. Ensure you follow the Blueprint and avoid generic terminology.";
+            scoreDiv.innerHTML = isBand9 ? "Score: Band 9 (Masterful). Excellent academic lexicon." : "Score: Band 6/7. Ensure you utilize the targeted lexicon from the Blueprint.";
         }
 
         function nextPrompt() {
-            idx = (idx + 1) % 10;
+            idx = (idx + 1) % data[comp].length;
             render();
         }
 
